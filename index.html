@@ -6,20 +6,22 @@
   <title>책방틈</title>
   <link rel="icon" href="asset/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    /* 저장된 화면 설정(글자 크기·다크 모드)을 깜빡임 없이 먼저 적용 */
+    try {
+      var s = JSON.parse(localStorage.getItem('bookstore.settings') || '{}');
+      if (s.fs) document.documentElement.setAttribute('data-fs', s.fs);
+      if (s.theme && s.theme !== 'auto') document.documentElement.setAttribute('data-theme', s.theme);
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <div class="app" id="app">
     <header class="apphead">
       <button type="button" class="icon-btn" id="backBtn" data-action="back" aria-label="뒤로">〈</button>
       <div class="header-brand"><img class="brand-logo" src="asset/bookbangteum-logo.png" alt="책방틈 로고"><strong id="pageTitle">책방틈</strong></div>
-      <button type="button" class="icon-btn" data-action="openMenu" aria-label="메뉴">⋯</button>
+      <button type="button" class="icon-btn" data-action="openMenu" aria-label="더보기" aria-haspopup="dialog">⋯</button>
     </header>
-
-    <!-- 📢 공지사항 및 데이터 기준일 안내 바 -->
-    <aside class="notice-bar" aria-label="공지사항">
-      <span class="notice-badge">공지</span>
-      <span class="notice-text">2026년 기준 서울시 마포구/종로구 독립서점 DB 반영 중</span>
-    </aside>
 
     <main class="screens" id="screens">
 
@@ -41,13 +43,11 @@
           <button type="button" class="chip" data-action="quickTopic" data-key="category" data-value="독립출판">독립출판</button>
           <button type="button" class="chip" data-action="quickTopic" data-key="mood" data-value="조용함">조용한 공간</button>
           <button type="button" class="chip" data-action="quickTopic" data-key="theme" data-value="혼자 가기">혼자 가기</button>
+          <button type="button" class="chip" data-action="quickTopic" data-key="theme" data-value="산책">산책 연계</button>
+          <button type="button" class="chip" data-action="quickTopic" data-key="facility" data-value="좌석">좌석 있는 곳</button>
+          <button type="button" class="chip" data-action="quickTopic" data-key="facility" data-value="음료">음료 마실 수 있는 곳</button>
         </div>
-
-        <!-- 📢 데이터 최신성 보완: 제보 유도 버튼 영역 -->
-        <div class="report-banner">
-          <p>영업시간이 달라졌거나 문을 닫은 책방을 아시나요?</p>
-          <button type="button" class="report-open-btn" id="openReportModalBtn" data-action="openReport">서점 정보 제보 / 수정 요청</button>
-        </div>
+        <div id="homeExtra"></div>
       </section>
 
       <!-- 02 책방 목록 / 10 결과 없음 -->
@@ -86,7 +86,6 @@
           <button type="button" role="tab" data-action="myTab" data-tab="fav">즐겨찾기</button>
           <button type="button" role="tab" data-action="myTab" data-tab="visits">방문 기록</button>
           <button type="button" role="tab" data-action="myTab" data-tab="courses">저장 코스</button>
-          <button type="button" role="tab" data-action="myTab" data-tab="reports">나의 제보 내역</button>
         </div>
         <div id="myBody"></div>
       </section>
@@ -111,11 +110,6 @@
         <div id="tasteBody"></div>
       </section>
 
-      <!-- 11 즐겨찾기 저장 완료 -->
-      <section class="screen" data-screen="done-fav" hidden>
-        <div id="doneFavBody"></div>
-      </section>
-
       <!-- 12 코스 저장 완료 -->
       <section class="screen" data-screen="done-course" hidden>
         <div id="doneCourseBody"></div>
@@ -123,15 +117,15 @@
     </main>
 
     <nav class="bottom" aria-label="주요 메뉴">
-      <button type="button" data-nav="home">홈</button>
-      <button type="button" data-nav="list">책방 탐색</button>
-      <button type="button" data-nav="course">코스</button>
-      <button type="button" data-nav="my">나의 책방</button>
+      <button type="button" data-nav="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg><span>홈</span></button>
+      <button type="button" data-nav="list"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>책방 탐색</span></button>
+      <button type="button" data-nav="course"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></svg><span>코스</span></button>
+      <button type="button" data-nav="my"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>나의 책방</span></button>
     </nav>
 
     <div class="sheet-wrap" id="sheetWrap" hidden>
       <div class="backdrop" data-action="closeSheet"></div>
-      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1">
         <div class="sheet-head">
           <strong id="sheetTitle"></strong>
           <button type="button" class="icon-btn" data-action="closeSheet" aria-label="닫기">✕</button>
@@ -140,40 +134,7 @@
       </div>
     </div>
 
-    <!-- 📝 사용자 피드백 및 정보 제보 모달 폼 -->
-    <div class="modal-wrap" id="reportModal" hidden>
-      <div class="backdrop" data-action="closeReport"></div>
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
-        <div class="modal-head">
-          <strong id="reportModalTitle">서점 정보 제보 / 수정 요청</strong>
-          <button type="button" class="icon-btn" data-action="closeReport" aria-label="닫기">✕</button>
-        </div>
-        <form class="modal-body" id="reportForm">
-          <label class="form-group">
-            <span>서점 이름 <mark>*</mark></span>
-            <input type="text" id="reportBookstore" placeholder="예: 어쩌다책방" required>
-          </label>
-          <label class="form-group">
-            <span>제보 유형 <mark>*</mark></span>
-            <select id="reportType" required>
-              <option value="영업시간 변경">영업시간 변경 / 불정기 휴무</option>
-              <option value="폐업/휴업">폐업 또는 휴업</option>
-              <option value="위치 이장">위치/주소 이동</option>
-              <option value="기타">기타 정보 수정 요청</option>
-            </select>
-          </label>
-          <label class="form-group">
-            <span>제보 내용 <mark>*</mark></span>
-            <textarea id="reportContent" rows="4" placeholder="수정 또는 업데이트가 필요한 구체적인 내용을 작성해 주세요." required></textarea>
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" data-action="closeReport">취소</button>
-            <button type="submit" class="btn-submit">제보하기</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
 
